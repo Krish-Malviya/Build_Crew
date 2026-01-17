@@ -1,135 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { User, Briefcase, BookOpen, TrendingUp, Award, Leaf, Target, ChevronRight, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { User, Briefcase, BookOpen, TrendingUp, Award, Leaf, Target, ChevronRight, CheckCircle, XCircle, AlertCircle, Loader } from 'lucide-react';
+import axios from 'axios';
 
-// Green Jobs Database
-const GREEN_JOBS = [
-  {
-    id: 1,
-    title: "Solar Energy Engineer",
-    sector: "Renewable Energy",
-    requiredSkills: ["Solar PV Design", "Grid Integration", "Python", "AutoCAD"],
-    salary: "6-12 LPA",
-    demand: "300% growth by 2030",
-    ndc: "Supports India's 500 GW renewable energy target by 2030",
-    description: "Design and implement solar power systems for residential and commercial use"
-  },
-  {
-    id: 2,
-    title: "Climate Data Analyst",
-    sector: "Climate Tech",
-    requiredSkills: ["Python", "GIS Mapping", "Climate Modeling", "Data Visualization"],
-    salary: "5-10 LPA",
-    demand: "250% growth by 2030",
-    ndc: "Essential for emissions tracking toward net-zero by 2070",
-    description: "Analyze climate data to support policy decisions and carbon accounting"
-  },
-  {
-    id: 3,
-    title: "Precision Agriculture Specialist",
-    sector: "Sustainable Agriculture",
-    requiredSkills: ["IoT Sensors", "Crop Science", "Data Analytics", "Soil Science"],
-    salary: "4-9 LPA",
-    demand: "200% growth by 2030",
-    ndc: "Reduces agricultural emissions and improves climate resilience",
-    description: "Implement technology-driven farming solutions for climate-smart agriculture"
-  },
-  {
-    id: 4,
-    title: "Green Building Architect",
-    sector: "Smart Cities",
-    requiredSkills: ["Sustainable Design", "LEED Certification", "Energy Modeling", "CAD"],
-    salary: "7-15 LPA",
-    demand: "180% growth by 2030",
-    ndc: "Supports urban climate adaptation and energy efficiency targets",
-    description: "Design energy-efficient, environmentally sustainable buildings"
-  },
-  {
-    id: 5,
-    title: "Wind Energy Technician",
-    sector: "Renewable Energy",
-    requiredSkills: ["Wind Turbine Maintenance", "Electrical Systems", "Safety Protocols", "Mechanical Engineering"],
-    salary: "4-8 LPA",
-    demand: "220% growth by 2030",
-    ndc: "Critical for achieving 500 GW renewable capacity",
-    description: "Install, maintain and repair wind turbine systems"
-  },
-  {
-    id: 6,
-    title: "EV Charging Infrastructure Manager",
-    sector: "Smart Cities",
-    requiredSkills: ["Electrical Engineering", "Network Planning", "Project Management", "IoT"],
-    salary: "6-12 LPA",
-    demand: "400% growth by 2030",
-    ndc: "Enables electric mobility transition reducing transport emissions",
-    description: "Plan and manage electric vehicle charging networks"
-  },
-  {
-    id: 7,
-    title: "Carbon Accounting Specialist",
-    sector: "Climate Tech",
-    requiredSkills: ["Carbon Accounting", "Sustainability Reporting", "Data Analysis", "GHG Protocols"],
-    salary: "5-11 LPA",
-    demand: "280% growth by 2030",
-    ndc: "Tracks emissions for net-zero commitments",
-    description: "Measure and report organizational carbon footprints"
-  },
-  {
-    id: 8,
-    title: "Climate-Resilient Crop Developer",
-    sector: "Sustainable Agriculture",
-    requiredSkills: ["Plant Biology", "Genetic Research", "Climate Science", "Biotechnology"],
-    salary: "6-13 LPA",
-    demand: "150% growth by 2030",
-    ndc: "Develops crops resistant to climate change impacts",
-    description: "Research and develop climate-adaptive crop varieties"
-  }
-];
-
-// Courses Database
-const COURSES = [
-  { id: 1, title: "Solar Energy Fundamentals", provider: "NPTEL", skills: ["Solar PV Design", "Grid Integration"], duration: "8 weeks", link: "#" },
-  { id: 2, title: "Climate Data Analysis with Python", provider: "SWAYAM", skills: ["Python", "Climate Modeling", "Data Visualization"], duration: "12 weeks", link: "#" },
-  { id: 3, title: "Precision Agriculture & IoT", provider: "NPTEL", skills: ["IoT Sensors", "Data Analytics"], duration: "6 weeks", link: "#" },
-  { id: 4, title: "Sustainable Urban Planning", provider: "Coursera", skills: ["Sustainable Design", "Energy Modeling"], duration: "10 weeks", link: "#" },
-  { id: 5, title: "GIS for Climate Analysis", provider: "SWAYAM", skills: ["GIS Mapping"], duration: "8 weeks", link: "#" },
-  { id: 6, title: "Wind Energy Technology", provider: "NPTEL", skills: ["Wind Turbine Maintenance", "Electrical Systems"], duration: "6 weeks", link: "#" },
-  { id: 7, title: "Carbon Footprint Management", provider: "edX", skills: ["Carbon Accounting", "GHG Protocols"], duration: "4 weeks", link: "#" },
-  { id: 8, title: "Electric Vehicle Infrastructure", provider: "NPTEL", skills: ["Electrical Engineering", "Network Planning"], duration: "8 weeks", link: "#" }
-];
-
-// Mission LiFE Actions
-const LIFE_ACTIONS = {
-  energy: [
-    { action: "Use LED bulbs throughout home", points: 10, skill: "Energy Efficiency" },
-    { action: "Install solar water heater", points: 30, skill: "Renewable Energy Basics" },
-    { action: "Conduct home energy audit", points: 20, skill: "Energy Conservation" }
-  ],
-  transport: [
-    { action: "Use public transport daily", points: 15, skill: "Sustainable Mobility" },
-    { action: "Cycle for short distances", points: 10, skill: "Urban Planning" },
-    { action: "Advocate for EV adoption", points: 25, skill: "Climate Advocacy" }
-  ],
-  waste: [
-    { action: "Start composting", points: 20, skill: "Circular Economy" },
-    { action: "Zero plastic challenge", points: 30, skill: "Waste Management" },
-    { action: "Proper e-waste disposal", points: 15, skill: "Environmental Responsibility" }
-  ],
-  water: [
-    { action: "Rainwater harvesting", points: 35, skill: "Water Resource Management" },
-    { action: "Drip irrigation for garden", points: 25, skill: "Climate Adaptation" },
-    { action: "Fix water leaks", points: 10, skill: "Resource Conservation" }
-  ]
+// Initial State Constants (Fallbacks)
+const INITIAL_PROFILE = {
+  name: '',
+  skills: [],
+  careerGoal: '',
+  lifeActions: [],
+  lifePoints: 0
 };
 
 const GreenCareerPlatform = () => {
   const [activeTab, setActiveTab] = useState('profile');
-  const [userProfile, setUserProfile] = useState({
-    name: '',
-    skills: [],
-    careerGoal: '',
-    lifeActions: [],
-    lifePoints: 0
-  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  // Data States
+  const [jobs, setJobs] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [lifeActions, setLifeActions] = useState({});
+  const [userProfile, setUserProfile] = useState(INITIAL_PROFILE);
+  
+  const [matchedJobs, setMatchedJobs] = useState([]);
+  const [recommendedCourses, setRecommendedCourses] = useState([]);
+  const [selectedJob, setSelectedJob] = useState(null);
+
+  // Available Skills for Selection
   const [availableSkills] = useState([
     "Python", "Solar PV Design", "Grid Integration", "AutoCAD", "GIS Mapping", 
     "Climate Modeling", "Data Visualization", "IoT Sensors", "Crop Science", 
@@ -139,72 +36,132 @@ const GreenCareerPlatform = () => {
     "Carbon Accounting", "Sustainability Reporting", "GHG Protocols", "Plant Biology",
     "Genetic Research", "Climate Science", "Biotechnology"
   ]);
-  const [matchedJobs, setMatchedJobs] = useState([]);
-  const [recommendedCourses, setRecommendedCourses] = useState([]);
-  const [selectedJob, setSelectedJob] = useState(null);
 
-  // Calculate skill match
-  const calculateMatch = (userSkills, jobSkills) => {
-    const matched = userSkills.filter(skill => jobSkills.includes(skill));
-    const percentage = (matched.length / jobSkills.length) * 100;
-    return {
-      percentage: Math.round(percentage),
-      matched,
-      missing: jobSkills.filter(skill => !userSkills.includes(skill))
-    };
-  };
-
-  // Analyze jobs when skills change
+  // Fetch Initial Data
   useEffect(() => {
-    if (userProfile.skills.length > 0) {
-      const analyzed = GREEN_JOBS.map(job => {
-        const match = calculateMatch(userProfile.skills, job.requiredSkills);
-        let lifeBoost = 0;
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [jobsRes, coursesRes, lifeRes] = await Promise.all([
+          axios.get('/api/jobs'),
+          axios.get('/api/courses'),
+          axios.get('/api/life/actions')
+        ]);
         
-        // LiFE boost for sustainability-focused jobs
-        if (['Renewable Energy', 'Climate Tech', 'Sustainable Agriculture'].includes(job.sector)) {
-          lifeBoost = Math.min(15, Math.floor(userProfile.lifePoints / 10));
+        setJobs(jobsRes.data);
+        setCourses(coursesRes.data);
+        setLifeActions(lifeRes.data);
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        setError("Failed to load platform data. Please ensure backend is running.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
+
+  // Match Jobs API Call
+  useEffect(() => {
+    const fetchMatches = async () => {
+      if (userProfile.skills.length > 0) {
+        try {
+          const res = await axios.post('/api/jobs/match', {
+            skills: userProfile.skills,
+            life_points: userProfile.lifePoints
+          });
+          setMatchedJobs(res.data);
+          
+          // Recommend courses based on missing skills of top job
+          if (res.data.length > 0) {
+            const topJob = res.data[0];
+            const courseRes = await axios.post('/api/courses/recommend', {
+              missing_skills: topJob.missing_skills || []
+            });
+            setRecommendedCourses(courseRes.data);
+          }
+        } catch (err) {
+          console.error("Error matching jobs:", err);
         }
-        
-        return {
-          ...job,
-          match: match.percentage + lifeBoost,
-          matchedSkills: match.matched,
-          missingSkills: match.missing,
-          lifeBoost
-        };
-      }).sort((a, b) => b.match - a.match);
-      
-      setMatchedJobs(analyzed);
-      
-      // Recommend courses for top 3 jobs
-      const topJobs = analyzed.slice(0, 3);
-      const allMissingSkills = [...new Set(topJobs.flatMap(j => j.missingSkills))];
-      const recommended = COURSES.filter(course => 
-        course.skills.some(skill => allMissingSkills.includes(skill))
-      ).slice(0, 6);
-      
-      setRecommendedCourses(recommended);
-    }
+      }
+    };
+
+    fetchMatches();
   }, [userProfile.skills, userProfile.lifePoints]);
 
-  const toggleSkill = (skill) => {
-    setUserProfile(prev => ({
-      ...prev,
-      skills: prev.skills.includes(skill)
-        ? prev.skills.filter(s => s !== skill)
-        : [...prev.skills, skill]
-    }));
+  // Save Profile API Call
+  const saveProfile = async (updatedProfile) => {
+    try {
+      await axios.post('/api/user/profile', {
+        name: updatedProfile.name,
+        email: 'user@example.com', // Placeholder
+        career_goal: updatedProfile.careerGoal,
+        skills: updatedProfile.skills
+      });
+    } catch (err) {
+      console.error("Error saving profile:", err);
+    }
   };
 
-  const addLifeAction = (category, actionIndex) => {
-    const action = LIFE_ACTIONS[category][actionIndex];
-    setUserProfile(prev => ({
-      ...prev,
-      lifeActions: [...prev.lifeActions, action.action],
-      lifePoints: prev.lifePoints + action.points
-    }));
+  const toggleSkill = (skill) => {
+    setUserProfile(prev => {
+      const updated = {
+        ...prev,
+        skills: prev.skills.includes(skill)
+          ? prev.skills.filter(s => s !== skill)
+          : [...prev.skills, skill]
+      };
+      saveProfile(updated);
+      return updated;
+    });
   };
+
+  const addLifeAction = async (category, actionIndex) => {
+    const action = lifeActions[category][actionIndex];
+    
+    try {
+      // Optimistic update
+      setUserProfile(prev => ({
+        ...prev,
+        lifeActions: [...prev.lifeActions, action.action],
+        lifePoints: prev.lifePoints + action.points
+      }));
+
+      // API Call
+      await axios.post('/api/user/1/life-action', { // Using ID 1 as placeholder
+        action: action.action,
+        category: category,
+        points: action.points
+      });
+
+    } catch (err) {
+      console.error("Error recording life action:", err);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-green-50">
+        <div className="text-center">
+          <Loader className="w-12 h-12 text-green-600 animate-spin mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-700">Loading Green Career Intelligence...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-red-50">
+        <div className="text-center p-8 bg-white rounded-lg shadow-lg">
+          <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Connection Error</h2>
+          <p className="text-gray-600">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
@@ -360,8 +317,8 @@ const GreenCareerPlatform = () => {
                           <p className="text-gray-600 text-sm mb-3">{job.description}</p>
                         </div>
                         <div className="text-right ml-4">
-                          <div className={`text-3xl font-bold ${job.match >= 70 ? 'text-green-600' : job.match >= 40 ? 'text-yellow-600' : 'text-gray-400'}`}>
-                            {job.match}%
+                          <div className={`text-3xl font-bold ${job.match_percentage >= 70 ? 'text-green-600' : job.match_percentage >= 40 ? 'text-yellow-600' : 'text-gray-400'}`}>
+                            {job.match_percentage}%
                           </div>
                           <p className="text-xs text-gray-500">Match</p>
                           {job.lifeBoost > 0 && (
@@ -373,24 +330,24 @@ const GreenCareerPlatform = () => {
                       <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
                         <div>
                           <p className="text-gray-500">Salary Range</p>
-                          <p className="font-semibold text-gray-900">{job.salary}</p>
+                          <p className="font-semibold text-gray-900">₹{job.salary_min/100000}-{job.salary_max/100000} LPA</p>
                         </div>
                         <div>
                           <p className="text-gray-500">Market Demand</p>
-                          <p className="font-semibold text-gray-900">{job.demand}</p>
+                          <p className="font-semibold text-gray-900">{job.demand_growth}% growth</p>
                         </div>
                       </div>
 
                       <div className="mb-4 p-3 bg-blue-50 rounded-lg">
                         <p className="text-xs font-medium text-blue-900 mb-1">🇮🇳 Paris Agreement Impact:</p>
-                        <p className="text-sm text-blue-800">{job.ndc}</p>
+                        <p className="text-sm text-blue-800">{job.ndc_relevance}</p>
                       </div>
 
                       <div className="space-y-3">
                         <div>
-                          <p className="text-sm font-medium text-gray-700 mb-2">✓ Skills You Have ({job.matchedSkills.length}):</p>
+                          <p className="text-sm font-medium text-gray-700 mb-2">✓ Skills You Have ({job.matched_skills ? job.matched_skills.length : 0}):</p>
                           <div className="flex flex-wrap gap-2">
-                            {job.matchedSkills.map(skill => (
+                            {job.matched_skills && job.matched_skills.map(skill => (
                               <span key={skill} className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">
                                 {skill}
                               </span>
@@ -398,11 +355,11 @@ const GreenCareerPlatform = () => {
                           </div>
                         </div>
 
-                        {job.missingSkills.length > 0 && (
+                        {job.missing_skills && job.missing_skills.length > 0 && (
                           <div>
-                            <p className="text-sm font-medium text-gray-700 mb-2">📚 Skills to Learn ({job.missingSkills.length}):</p>
+                            <p className="text-sm font-medium text-gray-700 mb-2">📚 Skills to Learn ({job.missing_skills ? job.missing_skills.length : 0}):</p>
                             <div className="flex flex-wrap gap-2">
-                              {job.missingSkills.map(skill => (
+                              {job.missing_skills && job.missing_skills.map(skill => (
                                 <span key={skill} className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs">
                                   {skill}
                                 </span>
@@ -496,7 +453,7 @@ const GreenCareerPlatform = () => {
               <p className="text-2xl font-bold mt-4">Your Points: {userProfile.lifePoints}</p>
             </div>
 
-            {Object.entries(LIFE_ACTIONS).map(([category, actions]) => (
+            {Object.entries(lifeActions).map(([category, actions]) => (
               <div key={category} className="bg-white rounded-lg shadow-md p-6">
                 <h3 className="text-xl font-bold text-gray-900 mb-4 capitalize">{category} Conservation</h3>
                 <div className="space-y-3">
@@ -566,7 +523,7 @@ const GreenCareerPlatform = () => {
                     <div>
                       <p className="text-sm text-gray-600">Career Matches</p>
                       <p className="text-3xl font-bold text-yellow-600">
-                        {matchedJobs.filter(j => j.match >= 50).length}
+                        {matchedJobs.filter(j => j.match_percentage >= 50).length}
                       </p>
                     </div>
                   </div>
@@ -591,7 +548,7 @@ const GreenCareerPlatform = () => {
                 {['Renewable Energy', 'Climate Tech', 'Sustainable Agriculture', 'Smart Cities'].map(sector => {
                   const sectorJobs = matchedJobs.filter(j => j.sector === sector);
                   const avgMatch = sectorJobs.length > 0 
-                    ? Math.round(sectorJobs.reduce((acc, j) => acc + j.match, 0) / sectorJobs.length)
+                    ? Math.round(sectorJobs.reduce((acc, j) => acc + j.match_percentage, 0) / sectorJobs.length)
                     : 0;
                   
                   return (
@@ -620,8 +577,8 @@ const GreenCareerPlatform = () => {
               <div className="bg-white rounded-lg shadow-md p-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-4">🎯 Next Steps to Boost Your Profile</h3>
                 <div className="space-y-3">
-                  {matchedJobs[0].missingSkills.slice(0, 3).map((skill, idx) => {
-                    const relatedCourse = COURSES.find(c => c.skills.includes(skill));
+                  {matchedJobs.length > 0 && matchedJobs[0].missing_skills && matchedJobs[0].missing_skills.slice(0, 3).map((skill, idx) => {
+                    const relatedCourse = courses.find(c => c.skills.includes(skill));
                     return (
                       <div key={idx} className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
                         <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0" />
@@ -681,7 +638,7 @@ const GreenCareerPlatform = () => {
               <div className="space-y-6">
                 <div className="p-4 bg-green-50 rounded-lg border border-green-200">
                   <h3 className="font-bold text-green-900 mb-2">🇮🇳 Paris Agreement Impact</h3>
-                  <p className="text-green-800">{selectedJob.ndc}</p>
+                  <p className="text-green-800">{selectedJob.ndc_relevance}</p>
                 </div>
 
                 <div>
@@ -723,7 +680,7 @@ const GreenCareerPlatform = () => {
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm font-medium text-green-700 mb-2">✓ You Have:</p>
-                      {selectedJob.matchedSkills.map(skill => (
+                      {selectedJob.matched_skills && selectedJob.matched_skills.map(skill => (
                         <span key={skill} className="inline-block px-2 py-1 bg-green-100 text-green-700 rounded text-xs mr-2 mb-2">
                           {skill}
                         </span>
@@ -731,7 +688,7 @@ const GreenCareerPlatform = () => {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-red-700 mb-2">📚 To Learn:</p>
-                      {selectedJob.missingSkills.map(skill => (
+                      {selectedJob.missing_skills && selectedJob.missing_skills.map(skill => (
                         <span key={skill} className="inline-block px-2 py-1 bg-red-100 text-red-700 rounded text-xs mr-2 mb-2">
                           {skill}
                         </span>
